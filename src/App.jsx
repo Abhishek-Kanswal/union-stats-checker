@@ -5,7 +5,7 @@ import SkeletonCard from "./components/SkeletonCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXTwitter, faGithub } from "@fortawesome/free-brands-svg-icons";
 import YapperSearchBar from "./components/ui/YapperSearchBar";
-import bg from "./assets/background.webp";
+import unisonXkiato from "./assets/unionxkaito.png";
 
 function App() {
   const [username, setUsername] = useState("");
@@ -13,43 +13,49 @@ function App() {
   const cleanUsername = username.replace(/^@/, "");
 
   return (
-    <div
-      style={{
-        backgroundImage: `url(${bg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-      className="min-h-screen text-white font-geist px-4 py-10 relative"
-    >
+    <div className="bg-[#09090B] min-h-screen text-white font-geist px-4 py-10 relative">
       {/* Centered section */}
       <div className="max-w-5xl mx-auto flex flex-col items-center justify-center mt-16">
-        <img src="src/assets/unionxkaito.png" className="w-[400px]" />
-        <p className="text-[20px]  text-[#B19979] text-center tracking-tight mt-2">
-          Search your username and view yourrank in real time.
+        <img src={unisonXkiato} className="w-[600px]" />
+        <p className="text-[20px]  text-[#9A9AA3] text-center tracking-tight mt-2">
+          Search your username and view your rank in real time.
         </p>
 
         {/* Styled container */}
-        <div className="w-full max-w-5xl min-h-[450px] rounded-xl border border-[#333] p-6 md:p-8 flex flex-col md:flex-row items-center justify-between shadow-lg mt-10 [background:linear-gradient(to_bottom_right,_#1d1c1c_40%,_rgba(255,163,80,0.1)_100%)]">
-          {/* Left: Fast loading image */}
-          <div className="w-[350px] h-[350px] bg-black/60 rounded-lg border border-[#444] flex items-center justify-center overflow-hidden">
-            {cleanUsername ? (
-              <img
-                src={`https://unavatar.io/x/${cleanUsername}?s=512`}
-                alt="User avatar"
-                className="w-full h-full object-cover rounded-lg"
-                loading="eager"
-              />
-            ) : (
-              <div className="text-gray-500">No user</div>
+        <div className="w-full max-w-5xl min-h-[450px] rounded-xl border border-[#333] p-6 md:p-8 flex flex-col shadow-lg mt-10 bg-[#101013]">
+          {/* Username at top of the card */}
+          <div className="h-[40px] mb-6 mx-3 w-full">
+            {cleanUsername && (
+              <div className="text-3xl font-bold text-white">
+                {cleanUsername.toUpperCase()}
+              </div>
             )}
           </div>
 
-          {/* Right: Info + Search */}
-          <div className="flex-1 mt-6 md:mt-0 md:ml-8 text-center md:text-left h-full">
-            <YapperInfo username={username} />
-            <YapperSearchBar onSearch={(value) => setUsername(value)} />
+          <div className="flex flex-col md:flex-row items-center justify-between h-full">
+            {/* Left: Avatar */}
+            <div className="w-[335px] h-[335px] bg-black/60 rounded-lg flex items-center justify-center overflow-hidden">
+              {cleanUsername ? (
+                <img
+                  src={`https://unavatar.io/x/${cleanUsername}`}
+                  alt="User avatar"
+                  className="w-full h-full object-cover rounded-lg"
+                  loading="eager"
+                />
+              ) : (
+                <div className="text-gray-500">No user</div>
+              )}
+            </div>
+
+            {/* Right: Info */}
+            <div className="flex-1 mt-6 md:mt-0 md:ml-8 text-center md:text-left h-full">
+              <YapperInfo username={username} />
+            </div>
           </div>
+        </div>
+
+        <div className="w-[70%] max-w-5xl mt-6">
+          <YapperSearchBar onSearch={(value) => setUsername(value)} />
         </div>
       </div>
 

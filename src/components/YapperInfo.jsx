@@ -1,7 +1,8 @@
+// YapLeaderboard.jsx
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-// Map for API durations
+// Duration Mappings
 const durationsMap = {
   "7D": "7d",
   "30D": "30d",
@@ -11,7 +12,7 @@ const durationsMap = {
 
 const displayDurations = Object.keys(durationsMap);
 
-// Fetch mindshare for 1st and 100th ranks from Kaito API
+// Fetch Top Mindshare Data
 const getMindshareData = async (duration) => {
   const smallDuration = duration.toLowerCase();
   try {
@@ -27,7 +28,7 @@ const getMindshareData = async (duration) => {
   }
 };
 
-// Create a map of fetch functions for each display duration
+// Fetch map
 const firstandHundredthMap = {
   "7D": () => getMindshareData("7d"),
   "30D": () => getMindshareData("30d"),
@@ -54,45 +55,45 @@ const YapLeaderboard = ({ username }) => {
 
         for (const displayKey of displayDurations) {
           const apiDuration = durationsMap[displayKey];
-          let realDuration = "";
-          if (apiDuration === "7d") realDuration = "7d";
-          else if (apiDuration === "30d") realDuration = "30d";
-          else if (apiDuration === "3m") realDuration = "90d";
-          else if (apiDuration === "6m") realDuration = "180d";
+          const realDuration =
+            apiDuration === "3m"
+              ? "90d"
+              : apiDuration === "6m"
+              ? "180d"
+              : apiDuration;
+
           const entries = response.filter(
             (u) =>
               u.S_DURATION === realDuration &&
               u.S_USERNAME?.toLowerCase() === cleanUsername
           );
+
           const sorted = response
             .filter((d) => d.S_DURATION === apiDuration)
             .sort((a, b) => b.N_MINDSHARE - a.N_MINDSHARE);
 
-          const first = sorted[0]?.N_MINDSHARE ?? null;
-          const hundredth = sorted[99]?.N_MINDSHARE ?? null;
-
           resultMap[displayKey] = {
             rank: entries[0]?.N_RANK ?? null,
             mindshare: entries[0]?.N_MINDSHARE ?? null,
-            first,
-            hundredth,
+            first: sorted[0]?.N_MINDSHARE ?? null,
+            hundredth: sorted[99]?.N_MINDSHARE ?? null,
           };
         }
 
         setData(resultMap);
       } catch (err) {
-        console.error("Error fetching user data:", err);
+        console.error("Fetch error:", err);
         setData({});
       }
     };
 
     const fetchHundredths = async () => {
       const result = {};
-      for (const key of Object.keys(durationsMap)) {
+      for (const key of displayDurations) {
         try {
           const res = await firstandHundredthMap[key]();
           result[key] = res.hundredth;
-        } catch (e) {
+        } catch {
           result[key] = 0;
         }
       }
@@ -101,11 +102,11 @@ const YapLeaderboard = ({ username }) => {
 
     const fetchFirst = async () => {
       const result = {};
-      for (const key of Object.keys(durationsMap)) {
+      for (const key of displayDurations) {
         try {
           const res = await firstandHundredthMap[key]();
           result[key] = res.first;
-        } catch (e) {
+        } catch {
           result[key] = 0;
         }
       }
@@ -136,7 +137,7 @@ const YapLeaderboard = ({ username }) => {
   return (
     <TableWrapper>
       <tbody>
-        {sortedDurations.map((duration, index) => {
+        {sortedDurations.map((duration, i) => {
           const item = data[duration];
 
           const rankDisplay = item?.rank != null ? `#${item.rank}` : "🤔";
@@ -145,9 +146,7 @@ const YapLeaderboard = ({ username }) => {
               ? `${(item.mindshare * 100).toFixed(4)}%`
               : "🤔";
           const firstDisplay =
-            first[duration] != null
-              ? `${first[duration].toFixed(4)}%`
-              : "-";
+            first[duration] != null ? `${first[duration].toFixed(4)}%` : "-";
           const hundredthDisplay =
             hundredths[duration] != null
               ? `${hundredths[duration].toFixed(4)}%`
@@ -156,15 +155,21 @@ const YapLeaderboard = ({ username }) => {
           return (
             <tr
               key={duration}
-              className={index % 2 === 0 ? "bg-[#18181B]" : "bg-[#27272A]"}
+              className={`transition-all ${
+                i % 2 === 0 ? "bg-[#1A1A1C]" : "bg-[#1F1F22]"
+              } hover:bg-[#27272A]`}
             >
-              <td className="py-2 px-3 rounded-l-md text-white">{duration}</td>
-              <td className="text-orange-300 font-semibold">{rankDisplay}</td>
-              <td className="text-white">{firstDisplay}</td>
-              <td className="font-semibold text-orange-300">
+              <td className="py-3 px-4 font-medium text-white text-sm rounded-l-lg">
+                {duration}
+              </td>
+              <td className="py-3 px-4 text-[#4BB7C3] font-semibold text-sm">
+                {rankDisplay}
+              </td>
+              <td className="py-3 px-4 text-white text-sm">{firstDisplay}</td>
+              <td className="py-3 px-4 text-[#4BB7C3] font-semibold text-sm">
                 {mindshareDisplay}
               </td>
-              <td className="py-2 px-3 rounded-r-md text-white">
+              <td className="py-3 px-4 text-white text-sm rounded-r-lg">
                 {hundredthDisplay}
               </td>
             </tr>
@@ -175,18 +180,22 @@ const YapLeaderboard = ({ username }) => {
   );
 };
 
-// Wrapper Layout
+// Table Container
 const TableWrapper = ({ children }) => (
-  <div className="bg-[#101013]/80 rounded-lg w-full max-w-[600px] p-4 border border-[#27272A] text-white text-[13px] leading-[1.6] font-medium tracking-wide">
+  <div className="bg-[#101013] border border-[#27272A] rounded-2xl w-full max-w-[640px] p-5 md:p-6 text-[13px] font-inter shadow-md">
     <div className="overflow-x-auto">
-      <table className="w-full text-left table-fixed border-separate border-spacing-y-[8px]">
+      <table className="w-full text-left table-fixed border-separate border-spacing-y-[10px]">
         <thead>
-          <tr className="text-gray-400 bg-[#18181B]">
-            <th className="py-2 px-3">Time</th>
-            <th className="py-2 px-3">Rank</th>
-            <th className="py-2 px-3">1st</th>
-            <th className="py-2 px-3">Mind</th>
-            <th className="py-2 px-3">100th</th>
+          <tr className="bg-[#1A1A1C] text-[#9A9AA3] text-sm">
+            <th className="py-3 px-4 font-medium text-left rounded-l-lg">
+              Time
+            </th>
+            <th className="py-3 px-4 font-medium text-left">Rank</th>
+            <th className="py-3 px-4 font-medium text-left">1st</th>
+            <th className="py-3 px-4 font-medium text-left">Mindshare</th>
+            <th className="py-3 px-4 font-medium text-left rounded-r-lg">
+              100th
+            </th>
           </tr>
         </thead>
         {children}
@@ -195,13 +204,13 @@ const TableWrapper = ({ children }) => (
   </div>
 );
 
-// Loading Skeleton Rows
+// Skeleton Loaders
 const SkeletonRow = () => (
-  <tr className="bg-[#18181B] animate-pulse">
+  <tr className="bg-[#1F1F22] animate-pulse">
     {Array(5)
-      .fill(null)
+      .fill(0)
       .map((_, i) => (
-        <td key={i} className="py-2 px-3 text-white">
+        <td key={i} className="py-3 px-4 text-gray-600">
           ----
         </td>
       ))}
